@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "LangGraph AI Agent",
+  "version": "1.0.0",
+  "description": "AI-powered Chrome extension for contextual web assistance",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting",
+    "tabs",
+    "sidePanel"
+  ],
+  "host_permissions": [
+    "http://localhost:8000/*",
+    "https://*/*"
+  ],
+  "side_panel": {
+    "default_path": "chat.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["chat.html", "popup.html", "assets/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
