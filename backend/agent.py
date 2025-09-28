@@ -50,15 +50,20 @@ INSTRUCTION_METADATA_KEY = "__instruction_message__"
 
 def clean_markdown(text: str) -> str:
     """Remove common Markdown formatting from text"""
-    # Remove bold/italic: **text** or *text*
-    text = re.sub(r'\*\*([^*]+)\*\*', r'\1', text)
-    text = re.sub(r'\*([^*]+)\*', r'\1', text)
-    # Remove headers: # ## ###
-    text = re.sub(r'^#+\s*', '', text, flags=re.MULTILINE)
+    # Remove bold/italic markers
+    text = re.sub(r'\*\*+', '', text)  # Remove ** and ***
+    text = re.sub(r'\*+', '', text)  # Remove remaining *
+    # Remove list markers: - 
+    text = re.sub(r'^\s*-\s*', '', text, flags=re.MULTILINE)
+    # Remove numbered lists
+    text = re.sub(r'^\s*\d+\.\s*', '', text, flags=re.MULTILINE)
+    # Remove headers: #
+    text = re.sub(r'^\s*#+\s*', '', text, flags=re.MULTILINE)
     # Remove links: [text](url) -> text
     text = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', text)
-    # Remove list markers: - or *
-    text = re.sub(r'^[-\*]\s*', '', text, flags=re.MULTILINE)
+    # Clean up extra spaces
+    text = re.sub(r'\s+', ' ', text)
+    text = text.strip()
     return text
 
 
