@@ -28,15 +28,19 @@ const Chat: React.FC = () => {
     return parts.map((part, index) => {
       if (urlRegex.test(part)) {
         return (
-          <a
+          <span
             key={index}
-            href={part}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-300 underline hover:text-blue-200"
+            className="text-blue-300 underline hover:text-blue-200 cursor-pointer"
+            onClick={() => {
+              if (chrome && chrome.tabs) {
+                chrome.tabs.create({ url: part });
+              } else {
+                window.open(part, '_blank');
+              }
+            }}
           >
             {part}
-          </a>
+          </span>
         );
       }
       return part;
