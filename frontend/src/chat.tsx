@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 
 interface Message {
   id: string;
@@ -22,6 +20,28 @@ const Chat: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const renderTextWithLinks = (text: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+
+    return parts.map((part, index) => {
+      if (urlRegex.test(part)) {
+        return (
+          <a
+            key={index}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-300 underline hover:text-blue-200"
+          >
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
+  };
 
   const sendMessage = async (event?: React.FormEvent<HTMLFormElement>) => {
     event?.preventDefault();
@@ -111,11 +131,9 @@ Photoshop, Illustrator, InDesign, ретушь.
             <div className={`flex flex-col gap-2 overflow-hidden rounded-lg px-4 py-3 text-foreground text-sm max-w-[80%] ${
               message.role === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-600 text-white'
             }`}>
-              {message.role === 'assistant' ? (
-                <ReactMarkdown remarkPlugins={[[remarkGfm, {}]]}>{message.content}</ReactMarkdown>
-              ) : (
-                <div>{message.content}</div>
-              )}
+              <div style={{ whiteSpace: 'pre-wrap' }}>
+                {renderTextWithLinks(message.content)}
+              </div>
             </div>
           </div>
         ))}

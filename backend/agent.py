@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Dict, Any, List, Optional
 import json
+import re
 import google.generativeai as genai
 from google.protobuf.json_format import MessageToDict
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage, ToolMessage
@@ -47,6 +48,20 @@ GEMINI_TOOLS = [
 INSTRUCTION_METADATA_KEY = "__instruction_message__"
 
 
+def clean_markdown(text: str) -> str:
+    """Remove common Markdown formatting from text"""
+    # Remove bold/italic: **text** or *text*
+    text = re.sub(r'\*\*([^*]+)\*\*', r'\1', text)
+    text = re.sub(r'\*([^*]+)\*', r'\1', text)
+    # Remove headers: # ## ###
+    text = re.sub(r'^#+\s*', '', text, flags=re.MULTILINE)
+    # Remove links: [text](url) -> text
+    text = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', text)
+    # Remove list markers: - or *
+    text = re.sub(r'^[-\*]\s*', '', text, flags=re.MULTILINE)
+    return text
+
+
 def ensure_instruction_message(state: "AgentState") -> None:
     """Вставляет системную инструкцию для модели, если её ещё нет."""
     has_instruction = any(
@@ -59,10 +74,17 @@ def ensure_instruction_message(state: "AgentState") -> None:
         instruction = SystemMessage(
             content=(
                 "Ты — LangGraph AI Assistant. Отвечай на вопросы пользователя по-русски, кратко и по делу. "
+                "НИКОГДА не используй Markdown-разметку, такую как *, **, -, #, [ссылки](url) и т.д. "
+                "Используй только чистый текст без каких-либо символов форматирования. "
+                "Для списков или структурированных данных используй чистый текст в формате: Название: ..., Описание: ..., Веб-сайт: ... "
+                "Примеры правильного формата: "
+                "Название школы: Schoolism "
+                "Веб-сайт: https://schoolism.com "
+                "Описание: онлайн-курсы для развития навыков в области искусства. "
                 "Если для точного ответа нужны свежие данные или дополнительные источники, вызови функцию "
                 "exa_researcher, передав объект с ключами \"query\" (формулировка запроса) и \"context\" "
                 "(релевантная выдержка из страницы, если она есть). После получения результатов внимательно "
-                "проанализируй их и составь итоговый ответ."
+                "проанализируй их и составь итоговый ответ в чистом тексте без Markdown."
             ),
             additional_kwargs={INSTRUCTION_METADATA_KEY: True},
         )
@@ -72,7 +94,7 @@ def ensure_instruction_message(state: "AgentState") -> None:
 class GeminiLLM:
     """Gemini LLM wrapper with tool calling support"""
 
-    def __init__(self, model_name: str = "gemini-1.5-flash", temperature: float = 0.7):
+    def __init__(self, model_name: str = "gemini-2.5-flash", temperature: float = 0.7):
         self.model = genai.GenerativeModel(model_name)
         self.temperature = temperature
 
@@ -204,6 +226,9 @@ class GeminiLLM:
                 response_text = getattr(response, "text", "") or ""
             except (ValueError, AttributeError):
                 response_text = ""
+
+        # Clean any remaining Markdown formatting
+        response_text = clean_markdown(response_text)
 
         return AIMessage(
             content=response_text,
