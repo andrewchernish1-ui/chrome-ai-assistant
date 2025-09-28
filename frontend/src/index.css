@@ -56,4 +56,24 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Markdown specific styles */
+  .markdown-body ul, .markdown-body ol {
+    list-style: initial; /* Use default list styling */
+    margin-left: 1.25em; /* Indent lists */
+    padding-left: 0;
+  }
+
+  .markdown-body li {
+    margin-bottom: 0.25em;
+  }
+
+  .markdown-body p {
+    margin-bottom: 1em; /* Space between paragraphs */
+  }
+
+  .markdown-body a {
+    color: #3b82f6; /* Tailwind blue-500 */
+    text-decoration: underline;
+  }
 }

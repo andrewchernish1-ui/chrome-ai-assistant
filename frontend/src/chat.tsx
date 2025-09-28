@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface Message {
   id: string;
@@ -44,7 +46,16 @@ const Chat: React.FC = () => {
 
       const assistantMessage: Message = {
         id: `msg_${Date.now() + 1}`,
-        content: 'This is a placeholder response. Backend integration coming soon.',
+        content: `В этой школе вы сможете овладеть навыками в следующих областях:
+
+**Графика:**
+Photoshop, Illustrator, InDesign, ретушь.
+
+**Фотография:**
+различные жанры фотографии, обработка в Lightroom и Capture One.
+
+**Нейросети:**
+использование нейросетей для работы, творчества и жизни.`,
         role: 'assistant',
         timestamp: new Date(),
       };
@@ -65,16 +76,16 @@ const Chat: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+    <div className="flex flex-col h-screen bg-gray-950">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-white/80 backdrop-blur-sm border-b border-slate-200">
+      <div className="flex items-center justify-between p-4 bg-gray-800/80 backdrop-blur-sm border-b border-gray-700">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-blue-600 rounded-lg">
             <div className="w-5 h-5 text-white font-bold text-center">AI</div>
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-slate-900">AI Assistant</h1>
-            <p className="text-xs text-slate-500">Powered by LangGraph</p>
+            <h1 className="text-lg font-semibold text-gray-100">ИИ-Ассистент</h1>
+            <p className="text-xs text-gray-400">Powered by LangGraph</p>
           </div>
         </div>
       </div>
@@ -86,9 +97,9 @@ const Chat: React.FC = () => {
             <div className="p-4 bg-blue-50 rounded-full w-16 h-16 mx-auto mb-4">
               <div className="w-full h-full text-blue-600 font-bold text-center text-2xl">AI</div>
             </div>
-            <h3 className="text-lg font-medium text-slate-900 mb-2">Welcome to AI Assistant</h3>
-            <p className="text-slate-500 max-w-sm mx-auto">
-              Ask me anything about the current webpage, fill forms, or get help with research tasks.
+            <h3 className="text-lg font-medium text-gray-100 mb-2">Добро пожаловать в ИИ-Ассистент</h3>
+            <p className="text-gray-400 max-w-sm mx-auto">
+              Здесь вы можете спрашивать всё о текущей странице, получать помощь с заполнением форм и исследованиями.
             </p>
           </div>
         )}
@@ -98,19 +109,23 @@ const Chat: React.FC = () => {
             message.role === 'user' ? 'justify-end' : 'justify-start'
           }`}>
             <div className={`flex flex-col gap-2 overflow-hidden rounded-lg px-4 py-3 text-foreground text-sm max-w-[80%] ${
-              message.role === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-900'
+              message.role === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-600 text-white'
             }`}>
-              <div>{message.content}</div>
+              {message.role === 'assistant' ? (
+                <ReactMarkdown remarkPlugins={[[remarkGfm, {}]]}>{message.content}</ReactMarkdown>
+              ) : (
+                <div>{message.content}</div>
+              )}
             </div>
           </div>
         ))}
 
         {isLoading && (
           <div className="flex w-full items-end justify-start gap-2 py-4">
-            <div className="flex flex-col gap-2 overflow-hidden rounded-lg px-4 py-3 text-foreground text-sm max-w-[80%] bg-gray-100">
-              <div className="flex items-center gap-2 text-gray-500">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500"></div>
-                <span>AI is thinking...</span>
+            <div className="flex flex-col gap-2 overflow-hidden rounded-lg px-4 py-3 text-foreground text-sm max-w-[80%] bg-gray-600">
+              <div className="flex items-center gap-2 text-white">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>ИИ думает...</span>
               </div>
             </div>
           </div>
@@ -119,12 +134,12 @@ const Chat: React.FC = () => {
       </div>
 
       {/* Input */}
-      <form onSubmit={sendMessage} className="w-full divide-y overflow-hidden rounded-xl border bg-background shadow-sm m-4">
+      <form onSubmit={sendMessage} className="w-full divide-y overflow-hidden rounded-xl border bg-gray-900 shadow-sm m-4">
         <textarea
           value={inputValue}
           onChange={(e) => setInputValue(e.currentTarget.value)}
           onKeyDown={handleKeyPress}
-          placeholder="Ask me anything about this page, fill forms, or research topics..."
+          placeholder="Задайте вопрос о странице, заполните формы или исследуйте темы..."
           className="w-full resize-none border-none p-3 shadow-none outline-none ring-0 focus-visible:ring-0 bg-transparent"
           disabled={isLoading}
         />

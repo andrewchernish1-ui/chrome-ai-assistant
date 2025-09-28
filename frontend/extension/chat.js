@@ -76,7 +76,7 @@ async function sendMessage() {
     addMessage(data.response, false);
   } catch (error) {
     console.error('Error:', error);
-    addMessage('Error connecting to AI assistant. Please try again.', false);
+    addMessage('Ошибка подключения к ИИ-ассистенту. Пожалуйста, попробуйте снова.', false);
   } finally {
     sendButton.disabled = false;
   }
@@ -89,7 +89,7 @@ function handleKeyPress(event) {
 }
 
 // Welcome message
-addMessage('Welcome to AI Assistant! Ask me anything about the current webpage.', false);
+addMessage('Добро пожаловать в ИИ-Ассистент! Здесь вы можете спрашивать всё о текущей странице.', false);
 
 // Event listeners
 messageInput.addEventListener('keypress', handleKeyPress);
