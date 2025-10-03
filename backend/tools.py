@@ -5,7 +5,7 @@ import requests
 from langchain_core.tools import BaseTool
 from pydantic import ConfigDict
 
-from config import Config
+from .config import Config
 
 
 EXA_ANSWER_URL = "https://api.exa.ai/answer"
@@ -43,10 +43,21 @@ class ExaResearcher(BaseTool):
         if not clean_query:
             return "EXA search: пустой запрос."
 
+        # Keywords that indicate searching for alternatives/similar items
+        search_keywords = [
+            "аналогичные", "аналогичных", "похожие", "похожих", "другие", "альтернативы", "альтернатив",
+            "similar", "alternatives", "other", "like", "such as", "comparable"
+        ]
+        is_search_query = any(keyword in clean_query.lower() for keyword in search_keywords)
+
         context_snippet = (context or "").strip()
-        if context_snippet:
+        if context_snippet and not is_search_query:
             context_snippet = context_snippet[:MAX_CONTEXT_CHARS]
             clean_query = f"{clean_query}\n\nContext:\n{context_snippet}"
+        elif is_search_query:
+            print(f"[ExaResearcher] Skipping context for search query: {clean_query[:100]}...")
+        else:
+            print(f"[ExaResearcher] No context provided or using it: context len={len(context_snippet)}")
 
         payload: Dict[str, Any] = {
             "query": clean_query,
@@ -54,12 +65,16 @@ class ExaResearcher(BaseTool):
             "stream": False,
         }
 
+        print(f"[ExaResearcher] Sending payload: {json.dumps(payload, ensure_ascii=False)}")
         try:
             response = self._session.post(EXA_ANSWER_URL, data=json.dumps(payload), timeout=40)
+            print(f"[ExaResearcher] Response status: {response.status_code}")
         except requests.RequestException as exc:
+            print(f"[ExaResearcher] Request failed: {exc}")
             return f"EXA API request failed: {exc}"
 
         if response.status_code >= 400:
+            print(f"[ExaResearcher] Error response: {response.text}")
             return (
                 f"EXA API error {response.status_code}: "
                 f"{response.text.strip() or 'Unknown error'}"
@@ -67,7 +82,9 @@ class ExaResearcher(BaseTool):
 
         try:
             data: Dict[str, Any] = response.json()
+            print(f"[ExaResearcher] Response data keys: {list(data.keys())}")
         except ValueError as exc:
+            print(f"[ExaResearcher] JSON parse error: {exc}")
             return f"EXA API returned invalid JSON: {exc}"
 
         answer = data.get("answer") or ""

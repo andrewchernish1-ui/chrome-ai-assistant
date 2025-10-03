@@ -54,26 +54,54 @@
       padding: 1rem;
       background: #1a1a1a;
     }
+    .input-container {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
     input {
-      width: 100%;
+      flex: 1;
       padding: 0.5rem;
       border: 1px solid #6b7280;
       border-radius: 0.375rem;
       background: #2a2a2a;
       color: #ffffff;
     }
+    .button-group {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
     button {
-      margin-top: 0.5rem;
       padding: 0.5rem 1rem;
-      background: #2563eb;
       color: white;
       border: none;
       border-radius: 0.375rem;
       cursor: pointer;
+      font-size: 0.875rem;
     }
     button:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+    }
+    .speech-button {
+      background: #10b981;
+      padding: 0.5rem;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .speech-button:hover:not(:disabled) {
+      background: #059669;
+    }
+    .send-button {
+      background: #2563eb;
+      padding: 0.5rem 1rem;
+    }
+    .send-button:hover:not(:disabled) {
+      background: #1d4ed8;
     }
   </style>
 </head>
@@ -87,8 +115,17 @@
     <div class="messages" id="messages"></div>
 
     <div class="input-area">
-      <input type="text" id="messageInput" placeholder="Задайте вопрос о странице...">
-      <button id="sendButton">Отправить</button>
+      <div class="input-container">
+        <input type="text" id="messageInput" placeholder="Задайте вопрос о странице...">
+        <div class="button-group">
+          <button id="speechButton" class="speech-button" title="Озвучить содержимое страницы">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+            </svg>
+          </button>
+          <button id="sendButton" class="send-button">Отправить</button>
+        </div>
+      </div>
     </div>
   </div>
 

@@ -4,12 +4,15 @@ from fastapi.responses import StreamingResponse
 import json
 import uuid
 from typing import Dict, Any
-from config import Config
-from agent import AgentState, process_message
+from .config import Config
+from .agent import AgentState, process_message
 from langchain_core.messages import BaseMessage
 
 # Validate configuration on startup
-Config.validate()
+try:
+    Config.validate()
+except ValueError as e:
+    print(f"Configuration warning: {e}")
 
 app = FastAPI(title="LangGraph AI Agent", version="1.0.0")
 

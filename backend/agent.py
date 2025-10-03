@@ -6,8 +6,8 @@ import google.generativeai as genai
 from google.protobuf.json_format import MessageToDict
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage, ToolMessage
 from langgraph.graph import StateGraph, START, END
-from config import Config
-from tools import ExaResearcher
+from .config import Config
+from .tools import ExaResearcher
 
 # Configure Gemini
 genai.configure(api_key=Config.GEMINI_API_KEY)
@@ -103,8 +103,48 @@ class GeminiLLM:
         self.model = genai.GenerativeModel(model_name)
         self.temperature = temperature
 
+    def _get_mock_response(self, messages: List[BaseMessage]) -> AIMessage:
+        """Возвращает mock ответ для тестирования без API ключей"""
+        # Получаем последнее сообщение пользователя
+        last_user_msg = None
+        for msg in reversed(messages):
+            if isinstance(msg, HumanMessage):
+                last_user_msg = msg.content
+                break
+
+        if not last_user_msg:
+            last_user_msg = "Привет"
+
+        # Генерируем контекстный ответ на основе сообщения пользователя
+        mock_responses = {
+            "привет": "Здравствуйте! Я ИИ-ассистент для работы с веб-страницами. Я могу помочь вам с анализом текущей страницы, заполнением форм и поиском информации.",
+            "помощь": "Я могу: проанализировать содержимое текущей страницы, помочь с заполнением форм, найти дополнительную информацию в интернете, ответить на вопросы о контенте страницы.",
+            "анализ": "Я проанализирую содержимое текущей страницы и дам краткое изложение основных тем и информации.",
+            "формы": "Я вижу формы на этой странице. Могу помочь с их заполнением, подсказав какие данные нужно ввести в каждое поле.",
+            "поиск": "Для поиска дополнительной информации я могу использовать инструменты веб-поиска. Просто спросите о том, что вас интересует.",
+        }
+
+        response_text = "Я ИИ-ассистент для работы с веб-страницами. "
+
+        # Ищем ключевые слова в сообщении пользователя
+        user_msg_lower = last_user_msg.lower()
+        for keyword, mock_response in mock_responses.items():
+            if keyword in user_msg_lower:
+                response_text = mock_response
+                break
+
+        # Если нет ключевых слов, даем общий ответ
+        if response_text == "Я ИИ-ассистент для работы с веб-страницами. ":
+            response_text += f"Вы сказали: '{last_user_msg}'. Чем могу помочь с этой страницей?"
+
+        return AIMessage(content=response_text)
+
     def invoke(self, messages: List[BaseMessage]) -> AIMessage:
         """Process messages and return AI response"""
+        # Если API ключ не установлен, возвращаем mock ответ
+        if not Config.GEMINI_API_KEY:
+            return self._get_mock_response(messages)
+
         contents: List[Dict[str, Any]] = []
 
         for msg in messages:
@@ -162,7 +202,7 @@ class GeminiLLM:
             print("[GeminiLLM] Invoking Gemini with payload:")
             print(json.dumps({
                 "contents": contents,
-                "tools": GEMINI_TOOLS,
+                "tools": GEMEMINI_TOOLS,
             }, ensure_ascii=False)[:4000])
         except Exception:
             pass
@@ -177,6 +217,10 @@ class GeminiLLM:
             import traceback
 
             print(f"[GeminiLLM] generate_content raised: {exc}")
+            # Если API не работает, возвращаем mock ответ
+            if "API_KEY" in str(exc) or "authentication" in str(exc).lower():
+                print("[GeminiLLM] API key issue detected, falling back to mock response")
+                return self._get_mock_response(messages)
             traceback.print_exc()
             raise
 
@@ -349,7 +393,7 @@ def create_agent() -> StateGraph:
                     if tool_name == "exa_researcher":
                         result = tool.research(
                             query=tool_args.get("query", ""),
-                            context=tool_args.get("context") or state.page_content
+                            context=tool_args.get("context", "")
                         )
                     else:
                         result = f"Unknown tool: {tool_name}"
